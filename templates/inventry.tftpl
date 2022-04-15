@@ -1,0 +1,9 @@
+[masters]
+%{ for index, dns in masters-dns ~}
+${dns} ansible_host=${masters-ip[index]} # ${masters-id[index]}
+%{ endfor ~}
+
+[workers]
+%{ for index, dns in workers-dns ~}
+${dns} ansible_host=${workers-ip[index]} # ${workers-id[index]}
+%{ endfor ~}

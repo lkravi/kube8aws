@@ -1,0 +1,8 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+  - env_variables
+  tasks:
+  - name: Disabling Swap on all nodes
+    shell: swapoff -a

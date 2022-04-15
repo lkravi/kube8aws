@@ -1,0 +1,5 @@
+[masters]
+ip-10-0-1-36.ec2.internal ansible_host=10.0.1.36 # i-019f29c2140b3277a
+
+[workers]
+ip-10-0-1-4.ec2.internal ansible_host=10.0.1.4 # i-0a9bbb2e0e489b883
