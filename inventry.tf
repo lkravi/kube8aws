@@ -27,7 +27,8 @@ resource "time_sleep" "wait_300_seconds" {
 resource "null_resource" "provisioner" {
   depends_on    = [
     local_file.ansible_inventory,
-    time_sleep.wait_300_seconds
+    time_sleep.wait_300_seconds,
+    aws_instance.bastion
     ]
 
   triggers = {
@@ -52,7 +53,9 @@ resource "null_resource" "provisioner" {
 resource "null_resource" "copy_ansible_playbooks" {
   depends_on    = [
     null_resource.provisioner,
-    time_sleep.wait_300_seconds]
+    time_sleep.wait_300_seconds,
+    aws_instance.bastion
+    ]
 
   triggers = {
     "always_run" = timestamp()
@@ -81,6 +84,8 @@ resource "null_resource" "run_ansible" {
     null_resource.copy_ansible_playbooks,
     aws_instance.masters,
     aws_instance.workers,
+    module.vpc,
+    aws_instance.bastion,
     time_sleep.wait_300_seconds
   ]
 
@@ -101,6 +106,6 @@ resource "null_resource" "run_ansible" {
     inline = [
       "echo 'starting ansible playbooks...' > /home/ec2-user/ansible-run-started.log",
       "sleep 60 && ansible-playbook -i /home/ec2-user/inventory /home/ec2-user/ansible/play.yml ",
-    ]
+    ] 
   }
 }

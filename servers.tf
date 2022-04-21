@@ -42,12 +42,30 @@ resource "aws_instance" "bastion" {
                 yum update -y > /home/ec2-user/yupdate.log
                 yum install -y python3-pip > /home/ec2-user/pip.log
                 pip3 install ansible > /home/ec2-user/ansi.log
-                echo "user data done" > /home/ec2-user/user-data.log
+                yum install -y python2
                 EOF
 
   tags = {
     Name = "Bastion"
   }
+
+/*
+                #!bin/bash
+                echo "PubkeyAcceptedKeyTypes=+ssh-rsa" >> /etc/ssh/sshd_config.d/10-insecure-rsa-keysig.conf
+                systemctl reload sshd
+                echo "${tls_private_key.ssh.private_key_pem}" >> /home/ec2-user/.ssh/id_rsa
+                chown ec2-user /home/ec2-user/.ssh/id_rsa
+                chgrp ec2-user /home/ec2-user/.ssh/id_rsa
+                chmod 600   /home/ec2-user/.ssh/id_rsa
+                echo "starting ansible install" > start.log
+                mkdir /home/ec2-user/tmp
+                export TMPDIR=/home/ec2-user/tmp/
+                yum update -y > /home/ec2-user/yupdate.log
+                yum install -y python3-pip > /home/ec2-user/pip.log
+                pip3 install ansible > /home/ec2-user/ansi.log
+                echo "user data done" > /home/ec2-user/user-data.log
+                EOF
+*/
 
 /*
   provisioner "local-exec" {
@@ -81,6 +99,7 @@ resource "aws_instance" "masters" {
   instance_type = "t3.micro"
   subnet_id = module.vpc.private_subnets[0] #TODO need to pick psub round-robin
   key_name          =   aws_key_pair.k8_ssh.key_name
+  security_groups = [aws_security_group.k8_nondes.id]
 
   tags = {
     Name = format("Master-%02d", count.index + 1)
@@ -94,6 +113,7 @@ resource "aws_instance" "workers" {
   instance_type = "t3.micro"
   subnet_id = module.vpc.private_subnets[0] #TODO need to pick psub round-robin
   key_name          =   aws_key_pair.k8_ssh.key_name
+  security_groups = [aws_security_group.k8_nondes.id]
 
   tags = {
     Name = format("Worker-%02d", count.index + 1)
