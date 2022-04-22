@@ -37,7 +37,7 @@ resource "null_resource" "provisioner" {
 
   provisioner "file" {
     source  = "${path.root}/inventory"
-    destination = "/home/ec2-user/inventory"
+    destination = "/home/ubuntu/inventory"
 
     connection {
       type          = "ssh"
@@ -63,7 +63,7 @@ resource "null_resource" "copy_ansible_playbooks" {
 
   provisioner "file" {
       source = "${path.root}/ansible"
-      destination = "/home/ec2-user/ansible/"
+      destination = "/home/ubuntu/ansible/"
 
       connection {
         type        = "ssh"
@@ -104,8 +104,8 @@ resource "null_resource" "run_ansible" {
 
   provisioner "remote-exec" {
     inline = [
-      "echo 'starting ansible playbooks...' > /home/ec2-user/ansible-run-started.log",
-      "sleep 60 && ansible-playbook -i /home/ec2-user/inventory /home/ec2-user/ansible/play.yml ",
+      "echo 'starting ansible playbooks...' > /home/ubuntu/ansible-run-started.log",
+      "sleep 60 && ansible-playbook -i /home/ubuntu/inventory /home/ubuntu/ansible/play.yml ",
     ] 
   }
 }

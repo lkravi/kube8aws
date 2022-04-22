@@ -5,7 +5,7 @@ variable "AWS_REGION" {
 
 variable "ami_id" {
     type = string
-    default = "ami-0888ba31959a5f6e5" #"ami-04745ee7d4c0fb5fd"
+    default = "ami-0d73480446600f555" #"ami-04745ee7d4c0fb5fd"
 }
 
 variable "availability_zones" {
@@ -40,5 +40,5 @@ variable "worker_node_count" {
 
 variable "ssh_user" {
     type = string
-    default = "ec2-user"
+    default = "ubuntu"
 }

@@ -32,40 +32,20 @@ resource "aws_instance" "bastion" {
                 #!bin/bash
                 echo "PubkeyAcceptedKeyTypes=+ssh-rsa" >> /etc/ssh/sshd_config.d/10-insecure-rsa-keysig.conf
                 systemctl reload sshd
-                echo "${tls_private_key.ssh.private_key_pem}" >> /home/ec2-user/.ssh/id_rsa
-                chown ec2-user /home/ec2-user/.ssh/id_rsa
-                chgrp ec2-user /home/ec2-user/.ssh/id_rsa
-                chmod 600   /home/ec2-user/.ssh/id_rsa
+                echo "${tls_private_key.ssh.private_key_pem}" >> /home/ubuntu/.ssh/id_rsa
+                chown ubuntu /home/ubuntu/.ssh/id_rsa
+                chgrp ubuntu /home/ubuntu/.ssh/id_rsa
+                chmod 600   /home/ubuntu/.ssh/id_rsa
                 echo "starting ansible install" > start.log
-                mkdir /home/ec2-user/tmp
-                export TMPDIR=/home/ec2-user/tmp/
-                yum update -y > /home/ec2-user/yupdate.log
-                yum install -y python3-pip > /home/ec2-user/pip.log
-                pip3 install ansible > /home/ec2-user/ansi.log
-                yum install -y python2
+                apt-add-repository ppa:ansible/ansible -y
+                apt update
+                apt install ansible -y
                 EOF
 
   tags = {
     Name = "Bastion"
   }
 
-/*
-                #!bin/bash
-                echo "PubkeyAcceptedKeyTypes=+ssh-rsa" >> /etc/ssh/sshd_config.d/10-insecure-rsa-keysig.conf
-                systemctl reload sshd
-                echo "${tls_private_key.ssh.private_key_pem}" >> /home/ec2-user/.ssh/id_rsa
-                chown ec2-user /home/ec2-user/.ssh/id_rsa
-                chgrp ec2-user /home/ec2-user/.ssh/id_rsa
-                chmod 600   /home/ec2-user/.ssh/id_rsa
-                echo "starting ansible install" > start.log
-                mkdir /home/ec2-user/tmp
-                export TMPDIR=/home/ec2-user/tmp/
-                yum update -y > /home/ec2-user/yupdate.log
-                yum install -y python3-pip > /home/ec2-user/pip.log
-                pip3 install ansible > /home/ec2-user/ansi.log
-                echo "user data done" > /home/ec2-user/user-data.log
-                EOF
-*/
 
 /*
   provisioner "local-exec" {

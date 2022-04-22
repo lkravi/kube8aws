@@ -2,110 +2,37 @@
 - hosts: all
   become: yes
   tasks:
-  - name: Add EPEL YUM repo
-    yum_repository:
-      name: epel
-      description: EPEL YUM repo
-      baseurl: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-  
-  - name: Install python2
-    raw: yum install -y python2
+   - name: Docker Installation
+     apt:
+       name: docker.io
+       state: present
+       update_cache: true
 
-  - name: Install dependencies
-    yum:
-      name: yum-utils
+   - name: install APT Transport HTTPS
+     apt:
+       name: apt-transport-https
+       state: present
+
+   - name: add Kubernetes apt-key for APT repository
+     apt_key:
+       url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+       state: present
+
+   - name: add Kubernetes APT repository
+     apt_repository:
+      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
       state: present
-    vars:
-        ansible_python_interpreter: /usr/bin/python2
+      filename: 'kubernetes'
 
-  - name: Adding Docker repository
-    command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+   - name: install kubelet
+     apt:
+       name: kubelet
+       state: present
+       update_cache: true
 
-  - name: Install Docker
-    yum:
-      name: "{{ packages }}"
-      state: present
-    vars:
-      packages:
-      - docker-ce
-      - docker-ce-cli
-      - containerd.io
-
-  - name: Up Docker service
-    ansible.builtin.service:
-      name: docker
-      state: started
-      enables: yes
-
-  - name: Remove swapfile from /etc/fstab
-    mount:
-      name: "{{ item }}"
-      fstype: swap
-      state: absent
-    with_items:
-      - swap
-      - none
-
-  - name: Disable swap
-    command: swapoff -a
-    when: ansible_swaptotal_mb > 0
-
-  - name: Disable IPtables
-    command: iptables -F
-
-  - name: Disable SE linux
-    command: setenforce 0
-
-  - name: Add yum repo for k8
-    ansible.builtin.copy:
-      src: kubernetes.repo
-      dest: /etc/yum.repos.d/kuberbetes.repo
-
-  - name: Install Kubernetes
-    yum:
-      name: "{{ packages }}"
-      state: present
-      update_cache: yes
-    vars:
-      packages:
-        - kubelet
-        - kubeadm
-        - kubectl
-  
-  - name: Reset kubelet
-    service:
-      name: kubelet
-      daemon_reload: yes
-      state: restarted
-
-  - name: Init k8 cluster
-    when: inventory_hostname in groups['masters']
-    command: kubeadm init  --pod-network-cidr=192.168.0.0/16
-
-  - name: configure k8 for ec2-user
-    command: "{{ item }}"
-    when: inventory_hostname in groups['masters']
-    with_items:
-      - mkdir -p /home/ec2-user/.kube
-      - cp -i /etc/kubernetes/admin.conf /home/ec2-user/.kube/config
-      - chown ec2-user:ec2-user /home/ec2-user/.kube/config
-
-  - name: Install Flannel pod network
-    become: false
-    when: inventory_hostname in groups['masters']
-    command: kubeadm token create --print-join-command
-    register: join_command
-
-  - name: Attach kubeadm join command to a file on Ansible control node
-    when: inventory_hostname in groups['masters']
-    local_action: "copy content='{{ join_command.stdout_lines[0] }}' dest=join-command"
-
-  - name: Copy the join-command file created above to worker node
-    when: inventory_hostname in groups['workers']
-    copy: src=join-command dest=/tmp/kubeadm-join.sh mode=0777
-
-  - name: Join the worker node to cluster
-    when: inventory_hostname in groups['workers']
-    command: sh /tmp/kubeadm-join.sh
+   - name: install kubeadm
+     apt:
+       name: kubeadm
+       state: present
 
   
