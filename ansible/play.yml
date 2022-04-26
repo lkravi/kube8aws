@@ -8,31 +8,163 @@
        state: present
        update_cache: true
 
-   - name: install APT Transport HTTPS
+   - name: Install APT Transport HTTPS
      apt:
        name: apt-transport-https
        state: present
 
-   - name: add Kubernetes apt-key for APT repository
+   - name: Add Kubernetes apt-key for APT repository
      apt_key:
        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
        state: present
 
-   - name: add Kubernetes APT repository
+   - name: Add Kubernetes APT repository
      apt_repository:
       repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
       state: present
       filename: 'kubernetes'
 
-   - name: install kubelet
+   - name: Kubelet Install
      apt:
        name: kubelet
        state: present
        update_cache: true
 
-   - name: install kubeadm
+   - name: Kubeadm Install
      apt:
        name: kubeadm
        state: present
+       update_cache: true
 
+## Install cri-dockerd as Docker Engine shim for Kubernetes
+      
+   - name: Get cri-dockerd latest Version number
+     uri:
+      url: https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest
+      timeout: 10
+     register: cri_dockerd_latest
+
+   - debug:
+      var: cri_dockerd_latest.json.tag_name
+
+   - name: Download cri-dockerd
+     get_url:
+        url: https://github.com/Mirantis/cri-dockerd/releases/download/{{ cri_dockerd_latest.json.tag_name }}/cri-dockerd-{{ cri_dockerd_latest.json.tag_name }}-linux-amd64.tar.gz
+        dest: /home/ubuntu
+
+   - name: Extract cri_dockerd
+     ansible.builtin.unarchive:
+        src: /home/ubuntu/cri-dockerd-{{ cri_dockerd_latest.json.tag_name }}-linux-amd64.tar.gz
+        dest: /usr/local/bin/
+        remote_src: yes
+
+   - name: systemd units for cri-dockerd - cri-docker.service
+     get_url:
+        url: https://raw.githubusercontent.com/Mirantis/cri-dockerd/master/packaging/systemd/cri-docker.service
+        dest: /etc/systemd/system/
+
+   - name: systemd units for cri-dockerd - cri-docker.socket
+     get_url:
+        url: https://raw.githubusercontent.com/Mirantis/cri-dockerd/master/packaging/systemd/cri-docker.socket
+        dest: /etc/systemd/system/
+
+   - name: Configure systemd for cri-dockerd
+     replace: 
+        path: /etc/systemd/system/cri-docker.service
+        regexp: "/usr/bin/cri-dockerd"
+        replace: "/usr/local/bin/cri-dockerd"
+
+   - name: Just force systemd to reread configs (2.4 and above)
+     ansible.builtin.systemd:
+        daemon_reload: yes
+
+   - name: Start and Enable the cri-dockerd service - cri-docker.service
+     ansible.builtin.systemd:
+      name: cri-docker.service
+      state: started
+      enabled: yes
+
+   - name: Start and Enable the cri-dockerd service - cri-docker.socket
+     ansible.builtin.systemd:
+      name: cri-docker.service
+      state: started
+      enabled: yes
+##
+
+### Master Node Configurations
+- hosts: masters
+  become: yes
+  tasks:
+   - name: Kubectl Install
+     apt:
+       name: kubectl
+       state: present
+       force: yes
+
+   - name: Start the cluster
+     shell: kubeadm init --pod-network-cidr=192.168.0.0/16 --cri-socket /run/cri-dockerd.sock >> cluster.txt
+     register: result
+     args:
+      chdir: $HOME
+      creates: cluster.txt
   
+   - name: Sleep for 20 seconds
+     wait_for:
+      timeout: 20
+
+   - name: Create .kube directory
+     become: yes
+     become_user: ubuntu
+     file:
+       path: $HOME/.kube
+       state: directory
+       mode: 0755
+
+   - name: Check admin.conf file exists.
+     stat:
+       path: /etc/kubernetes/admin.conf
+     register: k8s_conf
+
+   - name: Copy admin.conf to user's kube config
+     copy:
+       src: /etc/kubernetes/admin.conf
+       dest: /home/ubuntu/.kube/config
+       remote_src: yes
+       owner: ubuntu
+     when: k8s_conf.stat.exists
+
+   - name: Install Pod network
+     become: yes
+     become_user: ubuntu
+     shell: kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml >> pod_setup.txt
+     args:
+       chdir: $HOME
+       creates: pod_setup.txt
+
+   - name: Get join command
+     shell: kubeadm token create --print-join-command
+     register: join_command
+
+   - debug:
+      var: join_command
+
+   - name: Copy join command to local file
+     local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
+###
+
+#### Worker Node Configurations
+- hosts: workers
+  become: yes
+  tasks:
+    - name: Copy the join command to server location
+      copy: src=join-command dest=/tmp/join-command.sh mode=0777
+
+    - name: Add cri socket to kubelet
+      replace:
+        path: /tmp/join-command.sh
+        regexp: "--token"
+        replace: "--cri-socket='/run/cri-dockerd.sock' --token"
+
+    - name: Join the node to cluster
+      command: sh /tmp/join-command.sh
+####

@@ -36,7 +36,7 @@ resource "aws_instance" "bastion" {
                 chown ubuntu /home/ubuntu/.ssh/id_rsa
                 chgrp ubuntu /home/ubuntu/.ssh/id_rsa
                 chmod 600   /home/ubuntu/.ssh/id_rsa
-                echo "starting ansible install" > start.log
+                echo "starting ansible install"
                 apt-add-repository ppa:ansible/ansible -y
                 apt update
                 apt install ansible -y
@@ -76,10 +76,10 @@ resource "aws_instance" "bastion" {
 resource "aws_instance" "masters" {
   count         = var.master_node_count
   ami           = var.ami_id
-  instance_type = "t3.micro"
+  instance_type = "t3.small"
   subnet_id = module.vpc.private_subnets[0] #TODO need to pick psub round-robin
   key_name          =   aws_key_pair.k8_ssh.key_name
-  security_groups = [aws_security_group.k8_nondes.id]
+  security_groups = [aws_security_group.k8_nondes.id, aws_security_group.k8_masters.id]
 
   tags = {
     Name = format("Master-%02d", count.index + 1)
@@ -93,7 +93,7 @@ resource "aws_instance" "workers" {
   instance_type = "t3.micro"
   subnet_id = module.vpc.private_subnets[0] #TODO need to pick psub round-robin
   key_name          =   aws_key_pair.k8_ssh.key_name
-  security_groups = [aws_security_group.k8_nondes.id]
+  security_groups = [aws_security_group.k8_nondes.id, aws_security_group.k8_workers.id]
 
   tags = {
     Name = format("Worker-%02d", count.index + 1)

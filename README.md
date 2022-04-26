@@ -1,13 +1,14 @@
-# Fully Automated Kubernetes cluster from the Scratch on AWS using Terraform & Ansible.
+# Kubernetes cluster with Kubeadm on AWS using Terraform & Ansible.
 
+Terraform, Ansible, Docker, cri-dockerd, kubeadm, Kubernetes
 
-This repo contain the all required automation code for setting up Kubernetes cluster in AWS cloud environment from the scratch.
+This repo contain the all required automation code for setting up Kubernetes cluster using kubeadm in AWS cloud environment.
 
 ## Infrastructure Provisioning
 We have used Terraform for all the Infrastructure Provisioning automation.
 
 ## Kubernetes Cluster Setup 
-We have used Ansible for all Kubernetes Cluster configurations.
+We have used Ansible for all Server & Cluster configurations.
 
 
 
