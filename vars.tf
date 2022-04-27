@@ -35,10 +35,20 @@ variable "master_node_count" {
 
 variable "worker_node_count" {
     type = number
-    default = 1
+    default = 3
 }
 
 variable "ssh_user" {
     type = string
     default = "ubuntu"
+}
+
+variable "master_instance_type" {
+    type = string
+    default = "t3.small"
+}
+
+variable "worker_instance_type" {
+    type = string
+    default = "t3.micro"
 }
