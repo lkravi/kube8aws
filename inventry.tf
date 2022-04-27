@@ -13,10 +13,10 @@ resource "local_file" "ansible_inventory" {
     filename = "${path.root}/inventory"
 }
 
-resource "time_sleep" "wait_300_seconds" {
+resource "time_sleep" "wait_180_seconds" {
   depends_on = [aws_instance.bastion]
 
-  create_duration = "300s"
+  create_duration = "180s"
 
   triggers = {
     "always_run" = timestamp()
@@ -27,7 +27,7 @@ resource "time_sleep" "wait_300_seconds" {
 resource "null_resource" "provisioner" {
   depends_on    = [
     local_file.ansible_inventory,
-    time_sleep.wait_300_seconds,
+    time_sleep.wait_180_seconds,
     aws_instance.bastion
     ]
 
@@ -53,7 +53,7 @@ resource "null_resource" "provisioner" {
 resource "null_resource" "copy_ansible_playbooks" {
   depends_on    = [
     null_resource.provisioner,
-    time_sleep.wait_300_seconds,
+    time_sleep.wait_180_seconds,
     aws_instance.bastion
     ]
 
@@ -86,7 +86,7 @@ resource "null_resource" "run_ansible" {
     aws_instance.workers,
     module.vpc,
     aws_instance.bastion,
-    time_sleep.wait_300_seconds
+    time_sleep.wait_180_seconds
   ]
 
   triggers = {

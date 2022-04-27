@@ -71,18 +71,13 @@ resource "aws_instance" "bastion" {
 */
 }
 
-resource "random_integer" "subnet_index" {
-  min = 0
-  max = 2
-}
-
 
 #Master
 resource "aws_instance" "masters" {
   count         = var.master_node_count
   ami           = var.ami_id
   instance_type = var.master_instance_type
-  subnet_id = module.vpc.private_subnets[random_integer.subnet_index.result] #TODO need to pick psub round-robin
+  subnet_id = "${element(module.vpc.private_subnets, count.index)}"
   key_name          =   aws_key_pair.k8_ssh.key_name
   security_groups = [aws_security_group.k8_nondes.id, aws_security_group.k8_masters.id]
 
@@ -96,7 +91,7 @@ resource "aws_instance" "workers" {
   count         = var.worker_node_count
   ami           = var.ami_id
   instance_type = var.worker_instance_type
-  subnet_id = module.vpc.private_subnets[random_integer.subnet_index.result] #TODO need to pick psub round-robin
+  subnet_id = "${element(module.vpc.private_subnets, count.index)}"
   key_name          =   aws_key_pair.k8_ssh.key_name
   security_groups = [aws_security_group.k8_nondes.id, aws_security_group.k8_workers.id]
 
