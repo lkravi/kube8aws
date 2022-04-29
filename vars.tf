@@ -30,7 +30,7 @@ variable "public_subnets" {
 
 variable "master_node_count" {
     type = number
-    default = 1
+    default = 2
 }
 
 variable "worker_node_count" {
