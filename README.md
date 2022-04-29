@@ -10,8 +10,8 @@ We have used Terraform for all the Infrastructure Provisioning automation.
 ## Kubernetes Cluster Setup 
 We have used Ansible for all Server & Cluster configurations.
 
-
-
+## Architecture Diagram
+![alt text](https://raw.githubusercontent.com/lkravi/kube8aws/main/architecture.png)
 
 
 ### Issues:
