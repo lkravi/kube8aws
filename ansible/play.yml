@@ -230,15 +230,3 @@
     - name: Join the worker node to cluster
       command: sh /tmp/join_node_command.sh
 #####
-
-- hosts: masters_first
-  become: yes
-  tasks:
-    - name : Get Nodes
-      command: kubectl get nodes
-
-- hosts: masters_first
-  become: yes
-  tasks:
-    - name : Get pods
-      command: kubectl get pods -A
