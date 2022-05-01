@@ -36,7 +36,7 @@ Terraform apply will make sure it will provision all required infrastructure and
 
 ## Demo
 
-[![Watch the video](https://img.youtube.com/vi/Oxv7ZA-iOpc/maxresdefault.jpg)](https://www.youtube.com/watch?v=Oxv7ZA-iOpc
+[![Watch the video](https://img.youtube.com/vi/Oxv7ZA-iOpc/maxresdefault.jpg)](https://www.youtube.com/watch?v=Oxv7ZA-iOpc)
 
 #### Issues:
 I have experienced following issues so far when I working with different flavors of Linux.
