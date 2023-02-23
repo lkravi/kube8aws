@@ -49,13 +49,14 @@
 
    - name: Download cri-dockerd
      get_url:
-        url: https://github.com/Mirantis/cri-dockerd/releases/download/{{ cri_dockerd_latest.json.tag_name }}/cri-dockerd-{{ cri_dockerd_latest.json.tag_name }}-linux-amd64.tar.gz
+        url: https://github.com/Mirantis/cri-dockerd/releases/download/{{ cri_dockerd_latest.json.tag_name }}/cri-dockerd-{{ cri_dockerd_latest.json.tag_name | replace('v','') }}.amd64.tgz
         dest: /home/ubuntu
 
    - name: Extract cri_dockerd
      ansible.builtin.unarchive:
-        src: /home/ubuntu/cri-dockerd-{{ cri_dockerd_latest.json.tag_name }}-linux-amd64.tar.gz
+        src: /home/ubuntu/cri-dockerd-{{ cri_dockerd_latest.json.tag_name | replace('v','') }}.amd64.tgz
         dest: /usr/local/bin/
+        extra_opts: [--strip-components=1]
         remote_src: yes
 
    - name: systemd units for cri-dockerd - cri-docker.service
@@ -86,7 +87,7 @@
 
    - name: Start and Enable the cri-dockerd service - cri-docker.socket
      ansible.builtin.systemd:
-      name: cri-docker.service
+      name: cri-docker.socket
       state: started
       enabled: yes
 ##
@@ -143,7 +144,7 @@
        creates: pod_setup.txt
 
    - name: Create a new certificate key
-     shell: kubeadm init phase upload-certs --upload-certs
+     shell: kubeadm init phase upload-certs --upload-certs 
      register: join_certificate_key
 
    - name: Get join command
