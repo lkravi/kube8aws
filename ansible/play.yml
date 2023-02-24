@@ -143,8 +143,20 @@
        chdir: $HOME
        creates: pod_setup.txt
 
+   - name: get default kubeadm config
+     shell: kubeadm config print init-defaults > kubeadm_config.yaml
+     args:
+       chdir: $HOME
+       creates: kubeadm-config.yaml
+
+   - name: Add cri socket to kubeadm config
+     replace:
+      path: $HOME/kubeadm_config.yaml
+      regexp: "/var/run/containerd/containerd.sock"
+      replace: "/run/cri-dockerd.sock"
+
    - name: Create a new certificate key
-     shell: kubeadm init phase upload-certs --upload-certs 
+     shell: kubeadm init phase upload-certs --upload-certs --config $HOME/kubeadm_config.yaml
      register: join_certificate_key
 
    - name: Get join command
